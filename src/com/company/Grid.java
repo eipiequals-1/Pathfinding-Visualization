@@ -8,14 +8,19 @@ import java.awt.event.*;
 
 public class Grid extends JPanel implements ActionListener {
 
-    public static final int ROWS = 20;
-    public static final int COLS = 20;
-    public static final int CELL_W = Frame.WIDTH / COLS;
-    public static final int CELL_H = (Frame.HEIGHT - Frame.BUFFER_HEIGHT) / ROWS;
+    private final int ROWS = 20;
+    private final int COLS = 20;
+    private final int CELL_W = Frame.WIDTH / COLS;
+    private final int CELL_H = (Frame.HEIGHT - Frame.BUFFER_HEIGHT) / ROWS;
 
     private Node[][] grid;
 
-    private boolean diagonal = true;
+    private final int maxDelay = 100;
+    private final int minDelay = 1;
+
+    private final JCheckBox diagonal = new JCheckBox("diagonal", false);
+    private final JCheckBox showCosts =new JCheckBox("show values", false);
+    private final JSlider delay = new JSlider(minDelay, maxDelay);
 
     private Node start;
     private Node end;
@@ -27,22 +32,18 @@ public class Grid extends JPanel implements ActionListener {
     private JButton clear;
     private JButton reset;
 
-    private Timer timer;
+    private final Timer timer;
 
     private Algorithms algorithm = Algorithms.A_STAR;
 
-    private int delay = 5;
-
-    private boolean doingAlgo = false;
-
-    private Astar aStar = new Astar();
+    private final Astar aStar = new Astar();
 
     public Grid() {
         setLayout(null);
         setFocusable(true);
         setUpPanel();
         addMouseListener(new NewMouseListener());
-        timer = new Timer(delay, this);
+        timer = new Timer(maxDelay - delay.getValue(), this);
         timer.start();
     }
 
@@ -53,7 +54,7 @@ public class Grid extends JPanel implements ActionListener {
         g.fillRect(0, 0, Frame.WIDTH, Frame.HEIGHT);
         for (int y = 0; y < ROWS; y++) {
             for (int x = 0; x < COLS; x++) {
-                grid[y][x].draw(g);
+                grid[y][x].draw(g, showCosts.isSelected());
             }
         }
         drawGrid(g);
@@ -63,13 +64,14 @@ public class Grid extends JPanel implements ActionListener {
     public void actionPerformed(final ActionEvent e) {
         // updating method of the visualization
         if (algorithm == Algorithms.A_STAR) {
-            if (!diagonal && doingAlgo && aStar.isAlgoFinished()) {
-                aStar.noDiagonal(grid, start, end);
-            } else if (diagonal && doingAlgo && aStar.isAlgoFinished()) {
-                aStar.diagonal(grid, start, end);
+            if (!diagonal.isSelected() && aStar.isAlgoFinished()) {
+                aStar.noDiagonal(start, end);
+            } else if (diagonal.isSelected() && aStar.isAlgoFinished()) {
+                aStar.diagonal(start, end);
             }
         } else if (algorithm == Algorithms.DIJKSTRA) {
-        } else if (algorithm == Algorithms.BFS)
+        } else if (algorithm == Algorithms.BFS) {}
+        timer.setDelay(maxDelay - delay.getValue());
         repaint();
     }
 
@@ -79,13 +81,12 @@ public class Grid extends JPanel implements ActionListener {
             if ((start != null) && (end != null)) {
                 for (int y = 0; y < ROWS; y++) {
                     for (int x = 0; x < COLS; x++) {
-                        grid[y][x].setNeighbors(grid, diagonal);
+                        grid[y][x].setNeighbors(grid, diagonal.isSelected());
                         startCopy = start;
                         endCopy = end;
                     }
                 }
                 aStar.addStartNode(start);
-                doingAlgo = true;
             }
         }
     }
@@ -101,10 +102,12 @@ public class Grid extends JPanel implements ActionListener {
         @Override
         public void actionPerformed(final ActionEvent e) {
             resetGrid();
-            start = startCopy;
-            end = endCopy;
-            start.makeStart();
-            end.makeEnd();
+            try {
+                start = startCopy;
+                end = endCopy;
+                start.makeStart();
+                end.makeEnd();
+            } catch (Exception ex) {}
         }
     }
 
@@ -152,7 +155,6 @@ public class Grid extends JPanel implements ActionListener {
                     }
                     n.reset();
                 }
-                repaint();
             } catch (Exception ex) {
             }
         }
@@ -170,7 +172,7 @@ public class Grid extends JPanel implements ActionListener {
         grid = new Node[ROWS][COLS];
         for (int y = 0; y < ROWS; y++) {
             for (int x = 0; x < COLS; x++) {
-                grid[y][x] = new Node(x, y, CELL_W, CELL_H);
+                grid[y][x] = new Node(x, y, CELL_W, CELL_H, ROWS, COLS);
             }
         }
         visualize = setUpButton("VISUALIZE", Frame.WIDTH / 2 - 80, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 20, 160, 60, 30, new Color(7,
@@ -181,6 +183,12 @@ public class Grid extends JPanel implements ActionListener {
         add(clear);
         reset = setUpButton("RESET", 10, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 20, 100, 60, 30, new Color(31, 78, 199), new ResetListener());
         add(reset);
+        diagonal.setBounds(150, Frame.HEIGHT - 75, 100, 20);
+        add(diagonal);
+        delay.setBounds(150, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 5, 100, 20);
+        add(delay);
+        showCosts.setBounds(150, Frame.HEIGHT - 55, 100, 20);
+        add(showCosts);
     }
 
     private void drawGrid(Graphics g) {
@@ -203,6 +211,6 @@ public class Grid extends JPanel implements ActionListener {
         return button;
     }
     private enum Algorithms {
-        A_STAR, DIJKSTRA, BFS;
+        A_STAR, DIJKSTRA, BFS
     }
 }

@@ -11,6 +11,9 @@ public class Node {
     private int width;
     private int height;
 
+    private int rows;
+    private int cols;
+
     private Node parent;
     private ArrayList<Node> neighbors;
 
@@ -20,12 +23,14 @@ public class Node {
     private int h;
     private int g;
 
-    public Node(final int x, final int y, final int w, final int h) {
+    public Node(final int x, final int y, final int w, final int h, int rows, int cols) {
         this.x = x;
         this.y = y;
         this.color = Color.WHITE;
         this.width = w;
         this.height = h;
+        this.rows = rows;
+        this.cols = cols;
 
         this.f = 0;
         this.g = 0;
@@ -66,7 +71,7 @@ public class Node {
         return parent;
     }
 
-    public void draw(Graphics g) {
+    public void draw(Graphics g, boolean showCosts) {
         g.setColor(color);
         g.fillRect(x * width, y * height, width, height);
 
@@ -76,7 +81,7 @@ public class Node {
         String fScore = "" + f;
         String gScore = "" + this.g;
         String hScore = "" + h;
-        if (color != Color.WHITE) {
+        if (color != Color.WHITE && showCosts && width <= 40) {
             g.drawString(fScore, x * width + width / 2 - metrics.stringWidth(fScore) / 2, y * height + 15);
             g.drawString(gScore, x * width + 5, (y + 1) * height - 2);
             g.drawString(hScore, (x + 1) * width - 2 - metrics.stringWidth(hScore), (y + 1) * height - 2);
@@ -131,7 +136,7 @@ public class Node {
 
     public void setNeighbors(final Node[][] grid, boolean diagonal) {
         // DOWN
-        if (y + 1 < Grid.ROWS && !grid[y + 1][x].isWall()) {
+        if (y + 1 < rows && !grid[y + 1][x].isWall()) {
             neighbors.add(grid[y + 1][x]);
         }
         // UP
@@ -143,16 +148,16 @@ public class Node {
             neighbors.add(grid[y][x - 1]);
         }
         // RIGHT
-        if (x + 1 < Grid.COLS && !grid[y][x + 1].isWall()) {
+        if (x + 1 < cols && !grid[y][x + 1].isWall()) {
             neighbors.add(grid[y][x + 1]);
         }
         if (diagonal) {
             // BOTTOM LEFT
-            if (y + 1 < Grid.ROWS && x - 1 > -1 && !grid[y + 1][x - 1].isWall()) {
+            if (y + 1 < rows && x - 1 > -1 && !grid[y + 1][x - 1].isWall()) {
                 neighbors.add(grid[y + 1][x - 1]);
             }
             // BOTTOM RIGHT
-            if (y + 1 < Grid.ROWS && x + 1 < Grid.COLS && !grid[y + 1][x + 1].isWall()) {
+            if (y + 1 < rows && x + 1 < rows && !grid[y + 1][x + 1].isWall()) {
                 neighbors.add(grid[y + 1][x + 1]);
             }
             // TOP LEFT
@@ -160,7 +165,7 @@ public class Node {
                 neighbors.add(grid[y - 1][x - 1]);
             }
             // TOP RIGHT
-            if (y - 1 > -1 && x + 1 < Grid.COLS && !grid[y - 1][x + 1].isWall()) {
+            if (y - 1 > -1 && x + 1 < rows && !grid[y - 1][x + 1].isWall()) {
                 neighbors.add(grid[y - 1][x + 1]);
             }
         }

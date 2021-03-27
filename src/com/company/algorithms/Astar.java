@@ -22,7 +22,7 @@ public class Astar {
         //return blockCost * Math.max(dx, dy) + (diagonalCost - blockCost) * Math.min(dx, dy);
     }
 
-    public void noDiagonal(final Node[][] grid, final Node start, final Node end) {
+    public void noDiagonal(final Node start, final Node end) {
         if (!openList.isEmpty()) {
 
             // gets node with lowest f score
@@ -83,7 +83,7 @@ public class Astar {
         finishedAlgo = false;
     }
 
-    public void diagonal(final Node[][] grid, final Node start, final Node end) {
+    public void diagonal(final Node start, final Node end) {
         if (!openList.isEmpty()) {
 
             // gets node with lowest f score
@@ -109,14 +109,14 @@ public class Astar {
             }
 
             for (Node neighbor : current.getNeighbors()) {
-                int tempG = current.getGScore() + manhattan(current.getX(), current.getY(), neighbor.getX(), neighbor.getY());
+                int tempG = current.getGScore() + diagonalDis(current.getX(), current.getY(), neighbor.getX(), neighbor.getY());
 
                 if (neighbor.getGScore() == 0 || tempG < neighbor.getGScore()) {
                     // gscore is better
                     neighbor.setParent(current);
 
                     neighbor.setGScore(tempG);
-                    neighbor.setHScore(manhattan(neighbor.getX(), neighbor.getY(), end.getX(), end.getY()));
+                    neighbor.setHScore(diagonalDis(neighbor.getX(), neighbor.getY(), end.getX(), end.getY()));
                     neighbor.setFScore(neighbor.getGScore() + neighbor.getHScore());
 
                     if (!openList.contains(neighbor)) {
