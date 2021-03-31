@@ -3,13 +3,14 @@ package com.company.algorithms;
 import com.company.Node;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Astar {
 
     private final int blockCost = 10;
     private final int diagonalCost = 14;
-    private final ArrayList<Node> openList = new ArrayList<>();
-    private boolean finishedAlgo = false;
+    private final List<Node> openList = new ArrayList<>();
+    private boolean doingAlgo = false;
 
     private int manhattan(int x1, int y1, int x2, int y2) {
         return blockCost * (Math.abs(x1 - x2) + Math.abs(y1 - y2));
@@ -20,6 +21,15 @@ public class Astar {
         int dy = Math.abs(y1 - y2);
         return (int) (blockCost * Math.sqrt((dx * dx) + (dy * dy)));
         //return blockCost * Math.max(dx, dy) + (diagonalCost - blockCost) * Math.min(dx, dy);
+    }
+
+    private void reconstructPath(Node start, Node current) {
+        // reconstruct path
+        while (!current.getParentNode().equals(start)) {
+            current = current.getParentNode();
+            current.makePath();
+        }
+        doingAlgo = false;
     }
 
     public void noDiagonal(final Node start, final Node end) {
@@ -35,16 +45,8 @@ public class Astar {
             // remove it from the open set
             openList.remove(current);
 
-            if (current == end) {
-                // reconstruct path
-                Node currentNode = current; // copying the value
-                while (currentNode.getParentNode() != start) {
-                    currentNode = currentNode.getParentNode();
-                    currentNode.makePath();
-                }
-                start.makeStart();
-                end.makeEnd();
-                finishedAlgo = true;
+            if (current.equals(end)) {
+                reconstructPath(start, end);
             }
 
             for (Node neighbor : current.getNeighbors()) {
@@ -64,23 +66,26 @@ public class Astar {
                     }
                 }
             }
-            if (current != start) {
+            if (!current.equals(start)) {
                 current.makeClosed();
             }
         }
+        start.makeStart();
+        end.makeEnd();
     }
 
-    public void addStartNode(Node n) {
-        openList.add(n);
+    public void setUpGraph(Node start) {
+        openList.add(start);
+        doingAlgo = true;
     }
 
-    public boolean isAlgoFinished() {
-        return !finishedAlgo;
+    public boolean isDoingAlgo() {
+        return doingAlgo;
     }
 
     public void reset() {
         openList.clear();
-        finishedAlgo = false;
+        doingAlgo = false;
     }
 
     public void diagonal(final Node start, final Node end) {
@@ -96,16 +101,8 @@ public class Astar {
             // remove it from the open set
             openList.remove(current);
 
-            if (current == end) {
-                // reconstruct path
-                Node currentNode = current; // copying the value
-                while (currentNode.getParentNode() != start) {
-                    currentNode = currentNode.getParentNode();
-                    currentNode.makePath();
-                }
-                start.makeStart();
-                end.makeEnd();
-                finishedAlgo = true;
+            if (current.equals(end)) {
+                reconstructPath(start, end);
             }
 
             for (Node neighbor : current.getNeighbors()) {
@@ -125,9 +122,11 @@ public class Astar {
                     }
                 }
             }
-            if (current != start) {
+            if (!current.equals(start)) {
                 current.makeClosed();
             }
         }
+        start.makeStart();
+        end.makeEnd();
     }
 }

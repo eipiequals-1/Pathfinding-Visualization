@@ -1,9 +1,14 @@
 package com.company;
 
 import java.awt.*;
+import java.io.Serializable;
+import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.ArrayList;
+import java.util.Comparator;
 
-public class Node {
+public class Node implements Serializable, Comparable<Node> {
+
+    private static final long serialVersionUID = 5343869126593129023L;
 
     private int x;
     private int y;
@@ -22,6 +27,14 @@ public class Node {
     private int f;
     private int h;
     private int g;
+
+    private static Color startColor = Color.BLUE;
+    private static Color endColor = Color.RED;
+    private static Color wallColor = Color.BLACK;
+    private static Color emptyColor = Color.WHITE;
+    private static Color openColor = new Color(132, 255, 138);
+    private static Color closedColor = new Color(253, 90, 90);
+    private static Color pathColor = new Color(32, 233, 255);
 
     public Node(final int x, final int y, final int w, final int h, int rows, int cols) {
         this.x = x;
@@ -90,15 +103,47 @@ public class Node {
     }
 
     public void makeStart() {
-        color = Color.BLUE;
+        color = startColor;
     }
 
     public void makeEnd() {
-        color = Color.RED;
+        color = endColor;
     }
 
     public void makePath() {
-        color = new Color(32, 233, 255);
+        color = pathColor;
+    }
+
+    public void makeWall() {
+        color = wallColor;
+    }
+
+    public void makeOpen() {
+        color = openColor;
+    }
+
+    public void makeClosed() {
+        color = closedColor;
+    }
+
+    public boolean isWall() {
+        return color == wallColor;
+    }
+
+    public boolean isStart() {
+        return color == startColor;
+    }
+
+    public boolean isEnd() {
+        return color == endColor;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     public void reset() {
@@ -108,30 +153,6 @@ public class Node {
         h = 0;
         parent = null;
         neighbors.clear();
-    }
-
-    public void makeWall() {
-        color = Color.BLACK;
-    }
-
-    public void makeOpen() {
-        color = new Color(132, 255, 138);
-    }
-
-    public void makeClosed() {
-        color = new Color(253, 90, 90);
-    }
-
-    public boolean isWall() {
-        return color == Color.BLACK;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
     }
 
     public void setNeighbors(final Node[][] grid, boolean diagonal) {
@@ -173,5 +194,29 @@ public class Node {
 
     public ArrayList<Node> getNeighbors() {
         return neighbors;
+    }
+
+    @Override
+    public int compareTo(final Node node) {
+        //return node.f < this.f ? 1 : -1;
+        return (node.f - f);
+    }
+
+    @Override
+    public String toString() {
+        return "isStart: " + isStart() + ", f Cost: " + f + ", (x, y): (" + x + ", " + y + ")";
+    }
+
+    public static class CostComparator implements Comparator<Node> {
+        @Override
+        public int compare(final Node node1, final Node node2) {
+            if (node1.f < node2.f) {
+                return -1;
+            } else if (node1.f > node2.f) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.company;
 
 import com.company.algorithms.Astar;
+import com.company.algorithms.Dijkstra;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,18 +16,15 @@ public class Grid extends JPanel implements ActionListener {
 
     private Node[][] grid;
 
-    private final int maxDelay = 100;
+    private final int maxDelay = 150;
     private final int minDelay = 1;
 
     private final JCheckBox diagonal = new JCheckBox("diagonal", false);
-    private final JCheckBox showCosts =new JCheckBox("show values", false);
+    private final JCheckBox showCosts = new JCheckBox("show values", false);
     private final JSlider delay = new JSlider(minDelay, maxDelay);
 
     private Node start;
     private Node end;
-
-    private Node startCopy;
-    private Node endCopy;
 
     private JButton visualize;
     private JButton clear;
@@ -34,15 +32,16 @@ public class Grid extends JPanel implements ActionListener {
 
     private final Timer timer;
 
-    private Algorithms algorithm = Algorithms.A_STAR;
-
+    private Algorithms algorithm = Algorithms.DIJKSTRA;
     private final Astar aStar = new Astar();
+    private final Dijkstra dijkstra = new Dijkstra();
 
     public Grid() {
         setLayout(null);
         setFocusable(true);
         setUpPanel();
         addMouseListener(new NewMouseListener());
+        addMouseMotionListener(new NewMouseListener());
         timer = new Timer(maxDelay - delay.getValue(), this);
         timer.start();
     }
@@ -63,14 +62,25 @@ public class Grid extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(final ActionEvent e) {
         // updating method of the visualization
-        if (algorithm == Algorithms.A_STAR) {
-            if (!diagonal.isSelected() && aStar.isAlgoFinished()) {
-                aStar.noDiagonal(start, end);
-            } else if (diagonal.isSelected() && aStar.isAlgoFinished()) {
-                aStar.diagonal(start, end);
-            }
-        } else if (algorithm == Algorithms.DIJKSTRA) {
-        } else if (algorithm == Algorithms.BFS) {}
+
+        switch (algorithm) {
+            case A_STAR:
+                if (!diagonal.isSelected() && aStar.isDoingAlgo()) {
+                    aStar.noDiagonal(start, end);
+                } else if (diagonal.isSelected() && aStar.isDoingAlgo()) {
+                    aStar.diagonal(start, end);
+                }
+                break;
+            case DIJKSTRA:
+                if (!diagonal.isSelected() && dijkstra.isDoingAlgo()) {
+                    dijkstra.noDiagonal(start, end);
+                } else if (diagonal.isSelected() && dijkstra.isDoingAlgo()) {
+                    dijkstra.diagonal(start, end);
+                }
+                break;
+            case BFS:
+                break;
+        }
         timer.setDelay(maxDelay - delay.getValue());
         repaint();
     }
@@ -82,11 +92,18 @@ public class Grid extends JPanel implements ActionListener {
                 for (int y = 0; y < ROWS; y++) {
                     for (int x = 0; x < COLS; x++) {
                         grid[y][x].setNeighbors(grid, diagonal.isSelected());
-                        startCopy = start;
-                        endCopy = end;
                     }
                 }
-                aStar.addStartNode(start);
+                switch (algorithm) {
+                    case A_STAR:
+                        aStar.setUpGraph(start);
+                        break;
+                    case DIJKSTRA:
+                        dijkstra.setUpGraph(grid, start);
+                        break;
+                    case BFS:
+                        break;
+                }
             }
         }
     }
@@ -94,68 +111,63 @@ public class Grid extends JPanel implements ActionListener {
     private class ClearListener implements ActionListener {
         @Override
         public void actionPerformed(final ActionEvent e) {
-            resetGrid();
+            clearGrid();
         }
     }
 
     private class ResetListener implements ActionListener {
         @Override
         public void actionPerformed(final ActionEvent e) {
-            resetGrid();
-            try {
-                start = startCopy;
-                end = endCopy;
-                start.makeStart();
-                end.makeEnd();
-            } catch (Exception ex) {}
+
         }
     }
 
-    private void resetGrid() {
+    private void clearGrid() {
         for (int y = 0; y < ROWS; y++) {
             for (int x = 0; x < COLS; x++) {
                 grid[y][x].reset();
-                start = null;
-                end = null;
-                aStar.reset();
             }
         }
+        start = null;
+        end = null;
+        aStar.reset();
+        dijkstra.reset();
     }
 
-    private class NewMouseListener implements MouseListener {
+    private class NewMouseListener implements MouseListener, MouseMotionListener {
         @Override
         public void mousePressed(final MouseEvent e) {
+            createMap(e);
+        }
+        private void createMap(final MouseEvent e) {
             // the y coordinate might be out of range
-            try {
-                int x = e.getX();
-                int y = e.getY();
-                Node n = grid[y / CELL_H][x / CELL_W];
+            int gridX = e.getX() / CELL_W;
+            int gridY = e.getY() / CELL_H;
+            if (gridX < COLS && gridY < ROWS) {
+                Node n = grid[gridY][gridX];
                 // add a colored node to the board
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    if ((end == null) && (start != null)) {
+                    if (end == null && start != null && !start.equals(n)) {
                         n.makeEnd();
                         end = n;
-                    } else if (start == null) {
+                    } else if (start == null && !n.equals(end)) {
                         n.makeStart();
                         start = n;
                     } else {
-                        if ((n != start) && (n != end)) {
+                        if (!n.equals(start) && !n.equals(end)) {
                             n.makeWall();
                         }
                     }
                 }
                 // remove a colored node; clear the node
                 else if (SwingUtilities.isRightMouseButton(e)) {
-                    if (n == start) {
+                    if (n.equals(start)) {
                         start = null;
-                    } else if ((n == end) && (start == null)) {
-                        end = null;
-                    } else if ((n == end) && (start != null)) {
+                    } else if (n.equals(end)) {
                         end = null;
                     }
                     n.reset();
                 }
-            } catch (Exception ex) {
             }
         }
         @Override
@@ -166,6 +178,12 @@ public class Grid extends JPanel implements ActionListener {
         public void mouseExited(final MouseEvent e) {}
         @Override
         public void mouseClicked(final MouseEvent e) {}
+        @Override
+        public void mouseDragged(final MouseEvent e) {
+            createMap(e);
+        }
+        @Override
+        public void mouseMoved(final MouseEvent e) {}
     }
 
     private void setUpPanel() {
