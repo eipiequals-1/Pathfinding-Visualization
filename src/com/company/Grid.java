@@ -1,11 +1,13 @@
 package com.company;
 
 import com.company.algorithms.Astar;
+import com.company.algorithms.BreadthFirstSearch;
 import com.company.algorithms.Dijkstra;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Random;
 
 public class Grid extends JPanel implements ActionListener {
 
@@ -28,13 +30,16 @@ public class Grid extends JPanel implements ActionListener {
 
     private JButton visualize;
     private JButton clear;
-    private JButton reset;
+    private JButton randomize;
+
+    private JComboBox algoMenu = new JComboBox(new String[]{Algorithms.A_STAR.algoInWords, Algorithms.DIJKSTRA.algoInWords, Algorithms.BFS.algoInWords});
 
     private final Timer timer;
 
-    private Algorithms algorithm = Algorithms.DIJKSTRA;
+    private Algorithms algorithm = Algorithms.A_STAR;
     private final Astar aStar = new Astar();
     private final Dijkstra dijkstra = new Dijkstra();
+    private final BreadthFirstSearch bfs = new BreadthFirstSearch();
 
     public Grid() {
         setLayout(null);
@@ -62,7 +67,6 @@ public class Grid extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(final ActionEvent e) {
         // updating method of the visualization
-
         switch (algorithm) {
             case A_STAR:
                 if (!diagonal.isSelected() && aStar.isDoingAlgo()) {
@@ -79,6 +83,9 @@ public class Grid extends JPanel implements ActionListener {
                 }
                 break;
             case BFS:
+                if (bfs.isDoingAlgo()) {
+                    bfs.noDiagonal(start, end);
+                }
                 break;
         }
         timer.setDelay(maxDelay - delay.getValue());
@@ -102,6 +109,7 @@ public class Grid extends JPanel implements ActionListener {
                         dijkstra.setUpGraph(grid, start);
                         break;
                     case BFS:
+                        bfs.setUpGraph(start);
                         break;
                 }
             }
@@ -115,10 +123,49 @@ public class Grid extends JPanel implements ActionListener {
         }
     }
 
-    private class ResetListener implements ActionListener {
+    private class AlgoChooserListener implements ActionListener {
         @Override
         public void actionPerformed(final ActionEvent e) {
+            String algo = (String) algoMenu.getSelectedItem();
+            if (algo.equals(Algorithms.A_STAR.algoInWords)) {
+                algorithm = Algorithms.A_STAR;
+            } else if (algo.equals(Algorithms.DIJKSTRA.algoInWords)) {
+                algorithm = Algorithms.DIJKSTRA;
+            } else if (algo.equals(Algorithms.BFS.algoInWords)) {
+                algorithm = Algorithms.BFS;
+            }
+        }
+    }
 
+    private class RandomMazeListener implements ActionListener {
+        private final Random rand = new Random();
+        private final int minNodes = 50;
+        @Override
+        public void actionPerformed(final ActionEvent e) {
+            int newNodes = minNodes + rand.nextInt(ROWS * COLS - minNodes * 4); // at most 249 wall nodes
+            clearGrid();
+            int count = 0;
+            while (count < newNodes) {
+                int x = rand.nextInt(COLS);
+                int y = rand.nextInt(ROWS);
+                if (!grid[y][x].isWall()) {
+                    grid[y][x].makeWall();
+                    count++;
+                }
+            }
+            int x = rand.nextInt(COLS);
+            int y = rand.nextInt(ROWS);
+            grid[y][x].makeStart();
+            start = grid[y][x];
+            while (true) {
+                x = rand.nextInt(COLS);
+                y = rand.nextInt(ROWS);
+                if (!grid[y][x].isStart()) {
+                    grid[y][x].makeEnd();
+                    end = grid[y][x];
+                    break;
+                }
+            }
         }
     }
 
@@ -132,6 +179,7 @@ public class Grid extends JPanel implements ActionListener {
         end = null;
         aStar.reset();
         dijkstra.reset();
+        bfs.reset();
     }
 
     private class NewMouseListener implements MouseListener, MouseMotionListener {
@@ -143,7 +191,7 @@ public class Grid extends JPanel implements ActionListener {
             // the y coordinate might be out of range
             int gridX = e.getX() / CELL_W;
             int gridY = e.getY() / CELL_H;
-            if (gridX < COLS && gridY < ROWS) {
+            if (gridX < COLS && gridY < ROWS && gridX >= 0 && gridY >= 0) {
                 Node n = grid[gridY][gridX];
                 // add a colored node to the board
                 if (SwingUtilities.isLeftMouseButton(e)) {
@@ -193,20 +241,23 @@ public class Grid extends JPanel implements ActionListener {
                 grid[y][x] = new Node(x, y, CELL_W, CELL_H, ROWS, COLS);
             }
         }
-        visualize = setUpButton("VISUALIZE", Frame.WIDTH / 2 - 80, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 20, 160, 60, 30, new Color(7,
-                165, 165), new VisualizeListener());
-        add(visualize);
-        clear = setUpButton("CLEAR", Frame.WIDTH - 110, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 20, 100, 60, 30, new Color(236, 55, 60),
-                new ClearListener());
+        int buttonY = Frame.HEIGHT - Frame.BUFFER_HEIGHT + 10;
+        clear = setUpButton("CLEAR", Frame.WIDTH - 110, buttonY, 100, 60, 30, new Color(236, 55, 60), new ClearListener());
         add(clear);
-        reset = setUpButton("RESET", 10, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 20, 100, 60, 30, new Color(31, 78, 199), new ResetListener());
-        add(reset);
-        diagonal.setBounds(150, Frame.HEIGHT - 75, 100, 20);
+        visualize = setUpButton("VISUALIZE", Frame.WIDTH / 2 - 80, buttonY, 160, 60, 30, new Color(7, 165, 165), new VisualizeListener());
+        add(visualize);
+
+        randomize = setUpButton("NEW MAZE", 10, buttonY, 160, 60, 30, new Color(84, 126, 220), new RandomMazeListener());
+        add(randomize);
+        diagonal.setBounds(180, Frame.HEIGHT - 75, 100, 20);
         add(diagonal);
-        delay.setBounds(150, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 5, 100, 20);
+        delay.setBounds(180, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 5, 100, 20);
         add(delay);
-        showCosts.setBounds(150, Frame.HEIGHT - 55, 100, 20);
+        showCosts.setBounds(180, Frame.HEIGHT - 55, 100, 20);
         add(showCosts);
+        algoMenu.setBounds(visualize.getX() + visualize.getWidth() + 10, Frame.HEIGHT - Frame.BUFFER_HEIGHT + 5, 130, 25);
+        algoMenu.addActionListener(new AlgoChooserListener());
+        add(algoMenu);
     }
 
     private void drawGrid(Graphics g) {
@@ -229,6 +280,15 @@ public class Grid extends JPanel implements ActionListener {
         return button;
     }
     private enum Algorithms {
-        A_STAR, DIJKSTRA, BFS
+        A_STAR("A* Search"), DIJKSTRA("Dijkstra Search"), BFS("Breadth First Search");
+        public String algoInWords;
+        Algorithms(String algoInWords) {
+            this.algoInWords = algoInWords;
+        }
+
+        @Override
+        public String toString() {
+            return "";
+        }
     }
 }

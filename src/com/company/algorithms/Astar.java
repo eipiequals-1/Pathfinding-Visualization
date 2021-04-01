@@ -69,6 +69,8 @@ public class Astar {
             if (!current.equals(start)) {
                 current.makeClosed();
             }
+        } else {
+            doingAlgo = false;
         }
         start.makeStart();
         end.makeEnd();
@@ -125,6 +127,8 @@ public class Astar {
             if (!current.equals(start)) {
                 current.makeClosed();
             }
+        } else {
+            doingAlgo = false;
         }
         start.makeStart();
         end.makeEnd();
