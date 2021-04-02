@@ -2,24 +2,15 @@ package com.company.algorithms;
 
 import com.company.Node;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class BreadthFirstSearch {
 
-    private final int blockCost = 10;
     private boolean doingAlgo = false;
-    private final List<Node> queue = new ArrayList<>();
+    private final LinkedList<Node> queue = new LinkedList<>();
     private List<Node> visited = new ArrayList<>();
-
-    private int manhattan(final int x1, final int y1, final int x2, final int y2) {
-        return blockCost * (Math.abs(x1 - x2) + Math.abs(y1 - y2));
-    }
-    private int diagonalDis(final int x1, final int y1, final int x2, final int y2) {
-        int dx = Math.abs(x1 - x2);
-        int dy = Math.abs(y1 - y2);
-        return (int) (blockCost * Math.sqrt((dx * dx) + (dy * dy)));
-        //return blockCost * Math.max(dx, dy) + (diagonalCost - blockCost) * Math.min(dx, dy);
-    }
 
     private void reconstructPath(final Node start, final Node current) {
         // reconstruct path
@@ -34,7 +25,7 @@ public class BreadthFirstSearch {
 
     public void noDiagonal(final Node start, final Node end) {
         if (!queue.isEmpty()) {
-            Node current = queue.remove(0);
+            Node current = queue.pollFirst();
             visited.add(current);
 
             if (current.equals(end)) {
@@ -43,19 +34,20 @@ public class BreadthFirstSearch {
 
             for (Node neighbor : current.getNeighbors()) {
                 if (!visited.contains(neighbor)) {
-                    queue.add(neighbor);
+                    queue.addLast(neighbor);
                     visited.add(neighbor);
                     neighbor.setParent(current);
                     neighbor.makeOpen();
                 }
             }
-
             if (!current.equals(start)) {
                 current.makeClosed();
             }
         } else {
             doingAlgo = false;
         }
+        start.makeStart();
+        end.makeEnd();
     }
 
     public void setUpGraph(final Node start) {

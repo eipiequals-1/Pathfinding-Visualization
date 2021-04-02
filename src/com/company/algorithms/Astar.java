@@ -19,8 +19,8 @@ public class Astar {
     private int diagonalDis(int x1, int y1, int x2, int y2) {
         int dx = Math.abs(x1 - x2);
         int dy = Math.abs(y1 - y2);
-        return (int) (blockCost * Math.sqrt((dx * dx) + (dy * dy)));
-        //return blockCost * Math.max(dx, dy) + (diagonalCost - blockCost) * Math.min(dx, dy);
+        //return (int) (blockCost * Math.sqrt((dx * dx) + (dy * dy)));
+        return blockCost * Math.max(dx, dy) + (diagonalCost - blockCost) * Math.min(dx, dy);
     }
 
     private void reconstructPath(Node start, Node current) {
@@ -52,7 +52,7 @@ public class Astar {
             for (Node neighbor : current.getNeighbors()) {
                 int tempG = current.getGScore() + manhattan(current.getX(), current.getY(), neighbor.getX(), neighbor.getY());
 
-                if (neighbor.getGScore() == 0 || tempG < neighbor.getGScore()) {
+                if (tempG < neighbor.getGScore()) {
                     // gscore is better
                     neighbor.setParent(current);
 
@@ -77,6 +77,8 @@ public class Astar {
     }
 
     public void setUpGraph(Node start) {
+        start.setGScore(0);
+        start.setFScore(0);
         openList.add(start);
         doingAlgo = true;
     }
@@ -110,7 +112,7 @@ public class Astar {
             for (Node neighbor : current.getNeighbors()) {
                 int tempG = current.getGScore() + diagonalDis(current.getX(), current.getY(), neighbor.getX(), neighbor.getY());
 
-                if (neighbor.getGScore() == 0 || tempG < neighbor.getGScore()) {
+                if (tempG < neighbor.getGScore()) {
                     // gscore is better
                     neighbor.setParent(current);
 

@@ -2,14 +2,14 @@ package com.company.algorithms;
 
 import com.company.Node;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Dijkstra {
 
     private final int blockCost = 10;
     private final int diagonalCost = 14;
     private boolean doingAlgo = false;
-    //private Queue<Node> openSet = new PriorityQueue<>(new Node.CostComparator());
     private List<Node> openList = new ArrayList<>();
 
     private int manhattan(final int x1, final int y1, final int x2, final int y2) {
@@ -18,8 +18,8 @@ public class Dijkstra {
     private int diagonalDis(final int x1, final int y1, final int x2, final int y2) {
         int dx = Math.abs(x1 - x2);
         int dy = Math.abs(y1 - y2);
-        return (int) (blockCost * Math.sqrt((dx * dx) + (dy * dy)));
-        //return blockCost * Math.max(dx, dy) + (diagonalCost - blockCost) * Math.min(dx, dy);
+        return blockCost * Math.max(dx, dy) + (diagonalCost - blockCost) * Math.min(dx, dy);
+        //return (int) (blockCost * Math.sqrt((dx * dx) + (dy * dy)));
     }
 
     private void reconstructPath(final Node start, final Node current) {
@@ -52,6 +52,7 @@ public class Dijkstra {
 
             for (Node neighbor : current.getNeighbors()) {
                 int newDis = current.getFScore() + manhattan(current.getX(), current.getY(), neighbor.getX(), neighbor.getY());
+
                 if (newDis < neighbor.getFScore()) {
                     neighbor.setFScore(newDis);
                     neighbor.setParent(current);
@@ -90,6 +91,7 @@ public class Dijkstra {
 
             for (Node neighbor : current.getNeighbors()) {
                 int newDis = current.getFScore() + diagonalDis(current.getX(), current.getY(), neighbor.getX(), neighbor.getY());
+
                 if (newDis < neighbor.getFScore()) {
                     neighbor.setFScore(newDis);
                     neighbor.setParent(current);
@@ -109,14 +111,8 @@ public class Dijkstra {
         end.makeEnd();
     }
 
-    public void setUpGraph(final Node[][] grid, final Node start) {
+    public void setUpGraph(final Node start) {
         doingAlgo = true;
-
-        for (Node[] y : grid) {
-            for (Node x : y) {
-                x.setFScore(Integer.MAX_VALUE);
-            }
-        }
         start.setFScore(0);
         openList.add(start);
     }

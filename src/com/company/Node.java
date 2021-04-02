@@ -1,17 +1,21 @@
 package com.company;
 
 import java.awt.*;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
 
-public class Node implements Serializable, Comparable<Node> {
+public class Node {
 
-    private static final long serialVersionUID = 5343869126593129023L;
+    // Color constants
+    private final static Color START_COLOR = Color.BLUE;
+    private final static Color END_COLOR = Color.RED;
+    private final static Color WALL_COLOR = new Color(12, 53, 71);
+    private final static Color EMPTY_COLOR = Color.WHITE;
+    private final static Color OPEN_COLOR = new Color(175, 216, 248);
+    private final static Color CLOSED_COLOR = new Color(122, 156, 199);
+    private final static Color PATH_COLOR = new Color(255, 254, 106);
 
     private int x;
     private int y;
-
     private int width;
     private int height;
 
@@ -27,16 +31,10 @@ public class Node implements Serializable, Comparable<Node> {
     private int h;
     private int g;
 
-    private final static Color START_COLOR = Color.BLUE;
-    private final static Color END_COLOR = Color.RED;
-    private final static Color WALL_COLOR = new Color(5, 19, 56);
-    private final static Color EMPTY_COLOR = Color.WHITE;
-    private final static Color OPEN_COLOR = new Color(175, 216, 248);
-    private final static Color CLOSED_COLOR = new Color(122, 156, 199);
-    private final static Color PATH_COLOR = new Color(255, 254, 106);
-    //32, 233, 255 blue
-    // 253, 90, 90, closed
-    //132, 255, 138 open
+
+    private int animationWidth;
+    private final static int animationSpeed = 3;
+    private boolean finishedAnimation = false;
 
     public Node(final int x, final int y, final int w, final int h, final int rows, final int cols) {
         this.x = x;
@@ -47,12 +45,14 @@ public class Node implements Serializable, Comparable<Node> {
         this.rows = rows;
         this.cols = cols;
 
-        this.f = 0;
-        this.g = 0;
+        this.f = Integer.MAX_VALUE;
+        this.g = Integer.MAX_VALUE;
         this.h = 0;
 
         this.parent = null;
         this.neighbors = new ArrayList<>();
+
+        animationWidth = width / 2;
     }
 
     public void setFScore(final int f) {
@@ -88,7 +88,15 @@ public class Node implements Serializable, Comparable<Node> {
 
     public void draw(final Graphics g, final boolean showCosts) {
         g.setColor(color);
-        g.fillRect(x * width, y * height, width, height);
+        if (!finishedAnimation && color != EMPTY_COLOR) {
+            g.fillRect(x * width + width / 2 - animationWidth / 2, y * height + height / 2 - animationWidth / 2, animationWidth, animationWidth);
+            animationWidth += animationSpeed;
+            if (animationWidth > width) {
+                finishedAnimation = true;
+            }
+        } else {
+            g.fillRect(x * width, y * height, width, height);
+        }
 
         g.setColor(Color.BLACK);
         g.setFont(new Font("uroob", Font.PLAIN, 15));
@@ -96,12 +104,11 @@ public class Node implements Serializable, Comparable<Node> {
         String fScore = "" + f;
         String gScore = "" + this.g;
         String hScore = "" + h;
-        if ((color == PATH_COLOR || color == CLOSED_COLOR || color == OPEN_COLOR) && showCosts && width <= 40) {
+        if ((color == PATH_COLOR || color == CLOSED_COLOR || color == OPEN_COLOR) && showCosts && width >= 40) {
             g.drawString(fScore, x * width + width / 2 - metrics.stringWidth(fScore) / 2, y * height + 15);
             g.drawString(gScore, x * width + 5, (y + 1) * height - 2);
             g.drawString(hScore, (x + 1) * width - 2 - metrics.stringWidth(hScore), (y + 1) * height - 2);
         }
-
     }
 
     public void makeStart() {
@@ -114,18 +121,22 @@ public class Node implements Serializable, Comparable<Node> {
 
     public void makePath() {
         color = PATH_COLOR;
+        resetAnimation();
     }
 
     public void makeWall() {
         color = WALL_COLOR;
+        resetAnimation();
     }
 
     public void makeOpen() {
         color = OPEN_COLOR;
+        resetAnimation();
     }
 
     public void makeClosed() {
         color = CLOSED_COLOR;
+        resetAnimation();
     }
 
     public boolean isWall() {
@@ -154,11 +165,16 @@ public class Node implements Serializable, Comparable<Node> {
 
     public void reset() {
         color = EMPTY_COLOR;
-        f = 0;
-        g = 0;
+        f = Integer.MAX_VALUE;
+        g = Integer.MAX_VALUE;
         h = 0;
         parent = null;
         neighbors.clear();
+    }
+
+    private void resetAnimation() {
+        animationWidth = width / 2;
+        finishedAnimation = false;
     }
 
     public void setNeighbors(final Node[][] grid, final boolean diagonal) {
@@ -200,29 +216,5 @@ public class Node implements Serializable, Comparable<Node> {
 
     public ArrayList<Node> getNeighbors() {
         return neighbors;
-    }
-
-    @Override
-    public int compareTo(final Node node) {
-        //return node.f < this.f ? 1 : -1;
-        return (node.f - f);
-    }
-
-    @Override
-    public String toString() {
-        return "isStart: " + isStart() + ", f Cost: " + f + ", (x, y): (" + x + ", " + y + ")";
-    }
-
-    public static class CostComparator implements Comparator<Node> {
-        @Override
-        public int compare(final Node node1, final Node node2) {
-            if (node1.f < node2.f) {
-                return -1;
-            } else if (node1.f > node2.f) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
     }
 }
