@@ -1,9 +1,9 @@
 # Pathfinding Visualization
 
-###Made with javax.swing
+Made with javax.swing
 
 
-####Algorithms include:
+Algorithms include:
 - A* Search
 - Dijkstra Search
 - Breadth First Search
