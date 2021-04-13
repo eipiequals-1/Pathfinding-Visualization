@@ -40,7 +40,7 @@ public class BreadthFirstSearch extends PathfindingAlgo {
     }
 
     @Override
-    public void diagonal(Node start, Node end) {
+    public void diagonal(final Node start, final Node end) {
 
     }
 
