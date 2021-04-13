@@ -14,16 +14,16 @@ public class Node {
     private final static Color CLOSED_COLOR = new Color(122, 156, 199);
     private final static Color PATH_COLOR = new Color(255, 254, 106);
 
-    private int x;
-    private int y;
-    private int width;
-    private int height;
+    private final int x;
+    private final int y;
+    private final int width;
+    private final int height;
 
-    private int rows;
-    private int cols;
+    private final int rows;
+    private final int cols;
 
     private Node parent;
-    private ArrayList<Node> neighbors;
+    private final ArrayList<Node> neighbors;
 
     private Color color;
 
