@@ -6,23 +6,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class BreadthFirstSearch {
+public class BreadthFirstSearch extends PathfindingAlgo {
 
-    private boolean doingAlgo = false;
     private final LinkedList<Node> queue = new LinkedList<>();
     private List<Node> visited = new ArrayList<>();
 
-    private void reconstructPath(final Node start, final Node current) {
-        // reconstruct path
-        Node curr = current;
-        while (!curr.getParentNode().equals(start)) {
-            curr = curr.getParentNode();
-            curr.makePath();
-        }
-        current.makeEnd();
-        doingAlgo = false;
-    }
-
+    @Override
     public void noDiagonal(final Node start, final Node end) {
         if (!queue.isEmpty()) {
             Node current = queue.pollFirst();
@@ -50,18 +39,21 @@ public class BreadthFirstSearch {
         end.makeEnd();
     }
 
+    @Override
+    public void diagonal(Node start, Node end) {
+
+    }
+
+    @Override
     public void setUpGraph(final Node start) {
         queue.add(start);
         visited.add(start);
         doingAlgo = true;
     }
 
+    @Override
     public void reset() {
         queue.clear();
         visited.clear();
-    }
-
-    public boolean isDoingAlgo() {
-        return doingAlgo;
     }
 }
