@@ -8,11 +8,11 @@ public abstract class PathfindingAlgo {
     protected final int DIAGONAL_COST = 14;
     protected boolean doingAlgo = false;
 
-    protected final int manhattan(int x1, int y1, int x2, int y2) {
+    protected final int manhattan(final int x1, final int y1, final int x2, final int y2) {
         return BLOCK_COST * (Math.abs(x1 - x2) + Math.abs(y1 - y2));
     }
 
-    protected final int diagonalDis(int x1, int y1, int x2, int y2) {
+    protected final int diagonalDis(final int x1, final int y1, final int x2, final int y2) {
         int dx = Math.abs(x1 - x2);
         int dy = Math.abs(y1 - y2);
         //return (int) (blockCost * Math.sqrt((dx * dx) + (dy * dy)));
